@@ -3,6 +3,8 @@ const hardCodedUsers = require('./cloud9_data/hardCodedUsers.json');
 const compliments = require('./cloud9_data/compliments.json');
 const femball = require('./cloud9_data/femball.json');
 
+// Utility Functions
+
 function randomNum(min, max) {
     return Math.floor(Math.random() * (max - min) + min);
 }
@@ -71,7 +73,7 @@ class Commands {
 
 }
 
-exports.Commands = Commands;
-exports.hardCodedUsers = hardCodedUsers;
-
-	//if (/^gay/i.test(message.content) && (hardCodedUsers[message.author.id].name == 'abby')) message.channel.send({ files: ['./images/gay.jpg'] });
+module.exports = {
+    Commands: Commands,
+    hardCodedUsers: hardCodedUsers
+}

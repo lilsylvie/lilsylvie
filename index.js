@@ -18,16 +18,17 @@ client.options.presence.activities = [{name: 'VIM', type: ActivityType.Playing}]
 // determine if the recipient of the command is the author or someone else
 // if there is an argument which is an @, send its ID, otherwise send the id of the author
 // /[0-9]/g,'' strips the message of numbers and /\D/g,'' strips the message of anything not a number
-const commandRecipient = (message, args) => { return (args[0] && args[0].replace(/[0-9]/g,'') === '<@>') ? args[0].replace(/\D/g,'') : message.author.id }
+const commandRecipient = (message, args) => (args[0] && args[0].replace(/[0-9]/g,'') === '<@>') ? args[0].replace(/\D/g,'') : message.author.id;
 
 // functionality
 client.on('messageCreate', message => {
 
-	// send "gayyyy" quote if abby says gay
+	// send "gayyyy" quote if abby says gay at the beginning of a message (not case sensitive)
 	if (/^gay/i.test(message.content) && (hardCodedUsers[message.author.id].name == 'abby')) message.channel.send({ files: ['./images/gay.jpg'] });
 
 	// command code
-	if (message.content.substring(0, 1) == '~') {
+	// if message content begins with '~'
+	if (/^~/.test(message.content)) {
 		var args = message.content.substring(1).split(' ');
 		var cmd = args[0].toLowerCase();
 		args = args.splice(1);
