@@ -5,13 +5,9 @@ const femball = require('./cloud9_data/femball.json');
 
 // Utility Functions
 
-function randomNum(min, max) {
-    return Math.floor(Math.random() * (max - min) + min);
-}
+const randomNum = (min, max) => Math.floor(Math.random() * (max - min) + min);
 
-function randomChoice(message, arr) {
-    message.channel.send(arr[randomNum(0, arr.length)]);
-}
+const randomChoice = (message, arr) => message.channel.send(arr[randomNum(0, arr.length)]);
 
 class Commands {
 
