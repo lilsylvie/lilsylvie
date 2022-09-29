@@ -19,7 +19,7 @@ class Commands {
 
     uwuCommand = (message) => message.channel.send('*Rawr* ​x3 *nuzzles*, *pounces on you*, UwU you so warm'); // bad furry rap
 
-    feedCommand = (message, args) => message.channel.send((args[0].toLowerCase() === 'cum' ? 'YUMYYYY!!! :3' : 'Ewwwww nooo :sob:')); // only likes milk
+    feedCommand = (message, args) => message.channel.send((args[0].toLowerCase() === 'cum' ? 'YUMMYYYY!!! :3' : 'Ewwwww nooo :sob:')); // only likes milk
 
     ppCommand = (message) => message.channel.send('8' + '='.repeat(randomNum(0, 16)) + 'D'); // random size pp
 

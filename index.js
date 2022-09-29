@@ -29,8 +29,8 @@ client.on('messageCreate', message => {
 	// command code
 	// if message content begins with '~'
 	if (/^~/.test(message.content)) {
-		var args = message.content.substring(1).split(' ');
-		var cmd = args[0].toLowerCase();
+		let args = message.content.substring(1).split(' ');
+		let cmd = args[0].toLowerCase();
 		args = args.splice(1);
 
 		switch (cmd) {
