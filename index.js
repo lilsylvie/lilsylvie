@@ -32,45 +32,8 @@ client.on('messageCreate', message => {
 		let args = message.content.substring(1).split(' ');
 		let cmd = args[0].toLowerCase();
 		args = args.splice(1);
-
-		switch (cmd) {
-			case 'femboyme':
-				commandList.femboymeCommand(message);
-				break;
-			case 'boo':
-				commandList.booCommand(message);
-				break;
-			case 'uwu':
-				commandList.uwuCommand(message);
-				break;
-			case 'opinion':
-				commandList.opinionCommand(message, commandRecipient(message, args));
-				break;
-			case 'sylviesay':
-				commandList.sylvieSayCommand(message, args);
-				break;
-			case 'compliment':
-				commandList.complimentCommand(message);
-				break;
-			case 'femball':
-				commandList.femballCommand(message);
-				break;
-			case 'feed':
-				commandList.feedCommand(message, args);
-				break;
-			case 'pp':
-				commandList.ppCommand(message);
-				break;
-			case 'identify':
-				client.users.fetch(commandRecipient(message, args)).then((user) => { commandList.identifyCommand(message, user) }).catch(() => { 
-					console.error;
-					message.channel.send('**Unknown User** you fucking dumbass piece of shit');
-				});
-				break;
-			case 'help':
-				commandList.helpCommand(message);
-				break;
-		}
+		commandList[cmd+"Command"](message);
+		
 	}
 });
 
