@@ -34,6 +34,12 @@ client.on('messageCreate', message => {
 		args = args.splice(1);
 
 		switch (cmd) {
+			case 'femboyme':
+				commandList.femboymeCommand(message);
+				break;
+			case 'boo':
+				commandList.booCommand(message);
+				break;
 			case 'uwu':
 				commandList.uwuCommand(message);
 				break;

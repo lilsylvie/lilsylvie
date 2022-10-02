@@ -1,21 +1,24 @@
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, AttachmentBuilder } = require('discord.js');
+const Canvas = require('@napi-rs/canvas');
+const { request } = require('undici');
 const hardCodedUsers = require('./cloud9_data/hardCodedUsers.json');
 const compliments = require('./cloud9_data/compliments.json');
 const femball = require('./cloud9_data/femball.json');
 
 // Utility Functions
 
-const randomNum = (min, max) => Math.floor(Math.random() * (max - min) + min);
-
-const randomChoice = (message, arr) => message.channel.send(arr[randomNum(0, arr.length)]);
+const randomNum = (min, max) => Math.floor(Math.random() * (max - min) + min); // produces a random number between (min) and (max - 1)
+const randomChoice = (message, arr) => message.channel.send(arr[randomNum(0, arr.length)]); // chooses a random item in an array
 
 class Commands {
 
     /* SMALL COMMANDS*/
 
-    uwuCommand = (message) => message.channel.send('*Rawr* ​x3 *nuzzles*, *pounces on you*, UwU you so warm'); // bad furry rap
+    booCommand = (message) => message.channel.send('AHHHHHHH!!! :scream:'); // responds to "boo" with a scream
 
-    feedCommand = (message, args) => message.channel.send((args[0].toLowerCase() === 'cum' ? 'YUMMYYYY!!! :3' : 'Ewwwww nooo :sob:')); // only likes milk
+    uwuCommand = (message) => message.channel.send('*Rawr* ​x3 *nuzzles*, *pounces on you*, UwU you so warm'); // responds to "uwu" with a line from the bad furry rap
+
+    feedCommand = (message, args) => message.channel.send((args[0].toLowerCase() === 'takis' ? 'YUMMYYYY!!! :3' : 'Ewwwww nooo :sob:')); // only likes takis
 
     ppCommand = (message) => message.channel.send('8' + '='.repeat(randomNum(0, 16)) + 'D'); // random size pp
 
@@ -25,20 +28,51 @@ class Commands {
 
     /* LARGE COMMANDS */
 
-    opinionCommand = (message, id) => { // gives a hardcoded opinion for certain users
+    // sends an image of astolfo with the authors pfp in place of his face
+    femboymeCommand = async (message) => {
+        // create canvas
+        const canvas = Canvas.createCanvas(1598, 2400);
+		const context = canvas.getContext('2d');
+
+        // load images
+        const background = await Canvas.loadImage('./images/astolfo_full.webp');
+        const { body } = await request(message.author.displayAvatarURL({ extension: 'jpg' }));
+	    const avatar = await Canvas.loadImage(await body.arrayBuffer());
+
+	    // stretch background to fill canvas
+	    context.drawImage(background, 0, 0, canvas.width, canvas.height);
+        context.beginPath();
+
+        // clip avatar into circle
+        context.arc(730, 440, 170, 0, Math.PI * 2, true);
+        context.closePath();
+        context.clip();
+        context.drawImage(avatar, 560, 270, 340, 340);
+
+	    // contruct attachment and send it
+	    const attachment = new AttachmentBuilder(await canvas.encode('webp'), { name: 'femboyed.png' });
+	    message.channel.send({ files: [attachment] });
+    }
+
+    // gives a hardcoded opinion for certain users
+    opinionCommand = (message, id) => {
+        // if the id is in the list of users
         if (hardCodedUsers[id])
-            randomChoice(message, hardCodedUsers[id].opinions); // sends a random opinion from the opinions array
+            // send a random opinion from the opinions array
+            randomChoice(message, hardCodedUsers[id].opinions);
         else
             message.channel.send('Ask sylvie to add an opinion for ya! UwU');
     }
 
-    sylvieSayCommand = (message, args) => { // parrots sylvie's message
+    // parrots the message after the command if it was sent by sylvie
+    sylvieSayCommand = (message, args) => {
         if (hardCodedUsers[message.author.id].name === 'sylvie') {
             message.channel.send(args.join(' '));
             message.delete();
         }
     }
 
+    // sends the username and id of the target in an embed format
     identifyCommand = (message, target) => {
         const identityEmbed = new EmbedBuilder()
         .setColor(0xf2d2d6)
@@ -51,6 +85,7 @@ class Commands {
         message.channel.send({ embeds: [identityEmbed] });
     }
 
+    // sends a list of commands and their descriptions in an embed format
     helpCommand = (message) => {
         const helpEmbed = new EmbedBuilder()
         .setColor(0xf2d2d6)
