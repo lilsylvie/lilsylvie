@@ -24,7 +24,7 @@ const commandRecipient = (message, args) => (args[0] && args[0].replace(/[0-9]/g
 client.on('messageCreate', message => {
 
 	// send "gayyyy" quote if abby says gay at the beginning of a message (not case sensitive)
-	if (/^gay/i.test(message.content) && (hardCodedUsers[message.author.id].name == 'abby')) message.channel.send({ files: ['./images/gay.jpg'] });
+	if (/^gay/i.test(message.content) && (hardCodedUsers[message.author.id].name == 'abby')) return message.channel.send({ files: ['./images/gay.jpg'] });
 
 	// command code
 	// if message content begins with '~'
