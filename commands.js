@@ -10,26 +10,31 @@ const femball = require('./cloud9_data/femball.json');
 const randomNum = (min, max) => Math.floor(Math.random() * (max - min) + min); // produces a random number between (min) and (max - 1)
 const randomChoice = (message, arr) => message.channel.send(arr[randomNum(0, arr.length)]); // chooses a random item in an array
 
-class Commands {
+// determine if the recipient of the command is the author or someone else
+// if there is an argument which is an @, send its ID, otherwise send the id of the author
+// /[0-9]/g,'' strips the message of numbers and /\D/g,'' strips the message of anything not a number
+const commandRecipient = (message, args) => (args[0] && args[0].replace(/[0-9]/g,'') === '<@>') ? args[0].replace(/\D/g,'') : message.author.id;
+
+let commands = {
 
     /* SMALL COMMANDS*/
 
-    booCommand = (message) => message.channel.send('AHHHHHHH!!! :scream:'); // responds to "boo" with a scream
+    "booCommand": (message) => message.channel.send('AHHHHHHH!!! :scream:'), // responds to "boo" with a scream
 
-    uwuCommand = (message) => message.channel.send('*Rawr* ​x3 *nuzzles*, *pounces on you*, UwU you so warm'); // responds to "uwu" with a line from the bad furry rap
+    "uwuCommand": (message) => message.channel.send('*Rawr* ​x3 *nuzzles*, *pounces on you*, UwU you so warm'), // responds to "uwu" with a line from the bad furry rap
 
-    feedCommand = (message, args) => message.channel.send((args[0].toLowerCase() === 'takis' ? 'YUMMYYYY!!! :3' : 'Ewwwww nooo :sob:')); // only likes takis
+    "feedCommand": (message, args) => message.channel.send((args[0].toLowerCase() === 'takis' ? 'YUMMYYYY!!! :3' : 'Ewwwww nooo :sob:')), // only likes takis
 
-    ppCommand = (message) => message.channel.send('8' + '='.repeat(randomNum(0, 16)) + 'D'); // random size pp
+    "ppCommand": (message) => message.channel.send('8' + '='.repeat(randomNum(0, 16)) + 'D'), // random size pp
 
-    complimentCommand = (message) => randomChoice(message, compliments); // sends a random compliment
+    "complimentCommand": (message) => randomChoice(message, compliments), // sends a random compliment
 
-    femballCommand = (message) => randomChoice(message, femball); // random 8ball answer
+    "femballCommand": (message) => randomChoice(message, femball), // random 8ball answer
 
     /* LARGE COMMANDS */
 
     // sends an image of astolfo with the authors pfp in place of his face
-    femboymeCommand = async (message) => {
+    "femboymeCommand": async (message) => {
         // create canvas
         const canvas = Canvas.createCanvas(1598, 2400);
 		const context = canvas.getContext('2d');
@@ -52,28 +57,33 @@ class Commands {
 	    // contruct attachment and send it
 	    const attachment = new AttachmentBuilder(await canvas.encode('webp'), { name: 'femboyed.png' });
 	    message.channel.send({ files: [attachment] });
-    }
+    },
 
     // gives a hardcoded opinion for certain users
-    opinionCommand = (message, id) => {
+    "opinionCommand": (message, args) => {
+        let id = commandRecipient(message, args);
         // if the id is in the list of users
         if (hardCodedUsers[id])
             // send a random opinion from the opinions array
             randomChoice(message, hardCodedUsers[id].opinions);
         else
             message.channel.send('Ask sylvie to add an opinion for ya! UwU');
-    }
+    },
 
     // parrots the message after the command if it was sent by sylvie
-    sylvieSayCommand = (message, args) => {
+    "sylvieSayCommand": (message, args) => {
         if (hardCodedUsers[message.author.id].name === 'sylvie') {
             message.channel.send(args.join(' '));
             message.delete();
         }
-    }
+    },
 
     // sends the username and id of the target in an embed format
-    identifyCommand = (message, target) => {
+    "identifyCommand": async (message, args, users) => {
+        // assigns the user with the tagged ID to target
+        let target = await users.fetch(commandRecipient(message, args)).then((user) => { return user });
+
+        // creates and posts embed
         const identityEmbed = new EmbedBuilder()
         .setColor(0xf2d2d6)
         .setTitle('Omggg silly how do you not know this? :face_with_hand_over_mouth:')
@@ -83,10 +93,11 @@ class Commands {
             { name: 'ID:', value: target.id }
         );
         message.channel.send({ embeds: [identityEmbed] });
-    }
+    },
 
     // sends a list of commands and their descriptions in an embed format
-    helpCommand = (message) => {
+    "helpCommand": (message) => {
+        // creates and posts embed
         const helpEmbed = new EmbedBuilder()
         .setColor(0xf2d2d6)
         .setTitle('Command List')
@@ -105,6 +116,7 @@ class Commands {
 }
 
 module.exports = {
-    Commands: Commands,
-    hardCodedUsers: hardCodedUsers
+    commands: commands,
+    hardCodedUsers: hardCodedUsers,
+    commandRecipient: commandRecipient
 }
