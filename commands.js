@@ -71,7 +71,7 @@ let commands = {
     },
 
     // parrots the message after the command if it was sent by sylvie
-    "sylvieSayCommand": (message, args) => {
+    "sylviesayCommand": (message, args) => {
         if (hardCodedUsers[message.author.id].name === 'sylvie') {
             message.channel.send(args.join(' '));
             message.delete();

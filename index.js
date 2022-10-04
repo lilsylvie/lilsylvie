@@ -16,7 +16,6 @@ client.options.presence.activities = [{name: 'VIM', type: ActivityType.Playing}]
 
 // functionality
 client.on('messageCreate', message => {
-
 	// send "gayyyy" quote if abby says gay at the beginning of a message (not case sensitive)
 	if (/^gay/i.test(message.content) && (hardCodedUsers[message.author.id].name == 'abby')) return message.channel.send({ files: ['./images/gay.jpg'] });
 
@@ -29,7 +28,12 @@ client.on('messageCreate', message => {
 		args = args.splice(1);
 
 		// call the chosen command
-		commands[cmd + "Command"](message, args, client.users);
+		try {
+			commands[cmd + "Command"](message, args, client.users);
+		} catch {
+			// triggers if the command doesn't exist
+			message.channel.send("Sorry 3: I don't know how to do that >_<");	
+		}
 	}
 });
 
