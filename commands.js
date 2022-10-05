@@ -15,6 +15,43 @@ const randomChoice = (message, arr) => message.channel.send(arr[randomNum(0, arr
 // /[0-9]/g,'' strips the message of numbers and /\D/g,'' strips the message of anything not a number
 const commandRecipient = (message, args) => (args[0] && args[0].replace(/[0-9]/g,'') === '<@>') ? args[0].replace(/\D/g,'') : message.author.id;
 
+// draws a given number of user pfps on a background image
+/* profiles should be an array with the following structure:
+    [
+        {
+            id, avatarUrl, x, y, radius, diameter
+        }
+    ]
+*/
+const pfpDrawer = async (channel, height, width, backgroundImage, profiles, imageName, fileType) => {
+    // create canvas
+    const canvas = Canvas.createCanvas(height, width);
+    const context = canvas.getContext('2d');
+
+    // load background
+    const background = await Canvas.loadImage(backgroundImage);
+
+    // stretch background to fill canvas
+    context.drawImage(background, 0, 0, canvas.width, canvas.height);
+    context.beginPath();
+
+    // load and draw profile pictures
+    for (let profile of profiles) {
+        const body = profile.avatarUrl;
+        const avatar = await Canvas.loadImage(await body.arrayBuffer());
+
+        // clip avatar into circle
+        context.arc(profile.x + profile.radius, profile.y + profile.radius, profile.radius, 0, Math.PI * 2, true);
+        context.closePath();
+        context.clip();
+        context.drawImage(avatar, profile.x, profile.y, profile.diameter, profile.diameter);
+    }
+
+    // contruct attachment and send it
+    const attachment = new AttachmentBuilder(await canvas.encode(fileType), { name: imageName + '.' + fileType});
+    channel.send({ files: [attachment] });
+}
+
 let commands = {
 
     /* SMALL COMMANDS*/
@@ -33,30 +70,15 @@ let commands = {
 
     /* LARGE COMMANDS */
 
+    // sends an image of the author pointing a gun at the recipient
+    ////////////////////////////////////////////////////////////////
+
     // sends an image of astolfo with the authors pfp in place of his face
     "femboymeCommand": async (message) => {
-        // create canvas
-        const canvas = Canvas.createCanvas(1598, 2400);
-		const context = canvas.getContext('2d');
-
-        // load images
-        const background = await Canvas.loadImage('./images/astolfo_full.webp');
+        // gets url for avatar
         const { body } = await request(message.author.displayAvatarURL({ extension: 'jpg' }));
-	    const avatar = await Canvas.loadImage(await body.arrayBuffer());
-
-	    // stretch background to fill canvas
-	    context.drawImage(background, 0, 0, canvas.width, canvas.height);
-        context.beginPath();
-
-        // clip avatar into circle
-        context.arc(730, 440, 170, 0, Math.PI * 2, true);
-        context.closePath();
-        context.clip();
-        context.drawImage(avatar, 560, 270, 340, 340);
-
-	    // contruct attachment and send it
-	    const attachment = new AttachmentBuilder(await canvas.encode('webp'), { name: 'femboyed.png' });
-	    message.channel.send({ files: [attachment] });
+        // draws and sends imaage with author's pfp on astolfo
+        pfpDrawer(message.channel, 1598, 2400, './images/astolfo_full.webp', [{ id: message.author.id, avatarUrl: body, x: 560, y: 270, radius: 170, diameter: 340 }], 'femboyed', 'webp');
     },
 
     // gives a hardcoded opinion for certain users
