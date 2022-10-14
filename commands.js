@@ -4,6 +4,8 @@ const { request } = require('undici');
 const hardCodedUsers = require('./cloud9_data/hardCodedUsers.json');
 const compliments = require('./cloud9_data/compliments.json');
 const femball = require('./cloud9_data/femball.json');
+const wordleAnswers = require('./cloud9_data/wordleAnswers.json');
+const wordleGuesses = require('./cloud9_data/wordleGuesses.json');
 
 // Utility Functions
 
@@ -77,6 +79,7 @@ let commands = {
     "femboymeCommand": async (message) => {
         // gets url for avatar
         const { body } = await request(message.author.displayAvatarURL({ extension: 'jpg' }));
+
         // draws and sends imaage with author's pfp on astolfo
         pfpDrawer(message.channel, 1598, 2400, './images/astolfo_full.webp', [{ id: message.author.id, avatarUrl: body, x: 560, y: 270, radius: 170, diameter: 340 }], 'femboyed', 'webp');
     },
@@ -98,6 +101,48 @@ let commands = {
             message.channel.send(args.join(' '));
             message.delete();
         }
+    },
+
+    "wordleCommand": async (message) => {
+        // choose a random word from the answers array
+        let word = wordleAnswers[Math.floor(Math.random() * wordleAnswers.length)];
+
+        // creates a multi-dimensional array of size [6][5] filled with blank spaces
+        let board = Array.from(Array(6), x => Array.from(Array(5), x => ' '));
+
+        // loop checks this to see if the game is finished
+        let gameOver = false;
+
+        // `m` is a message object that will be passed through the filter function
+        // checks if the word is in the answers or guesses lists as well as if the author is correct
+        const filter = m => (wordleGuesses.includes(m.content.toLowerCase()) || wordleAnswers.includes(m.content.toLowerCase())) && m.author.id === message.author.id;
+
+        for (let row in board) {
+            await message.channel.awaitMessages({ filter, max: 1, time: 500000, errors: ['time'] })
+			.then(collected => {
+                // populates the row away with the guess string
+                board[row] = Array.from(collected.first().content.toLowerCase());
+
+                // for each letter in the row
+                for (let i in board[row]) {
+                    // letterRel(ation) can be a value of 0, 1, or 2; 0 - not in the word, 1 - in the word, 2 - in the correct spot
+                    // it adds whether or not the letter occurs in the word, with if it is in the right spot, and multiplies it by whether or not there are too many of that letter
+                    let letterRel = (word.includes(board[row][i]) + (word[i] == board[row][i])) * (board[row].filter(x => x === board[row][i]).length <= Array.from(word).filter(x => x === board[row][i]).length);
+                    
+                    // based on the letterRelation, the letter is surrounded with certain symbols to color it
+                    board[row][i] = ' [#'[letterRel] + board[row][i] + ' ] '[letterRel];
+                }
+                // turns the board into a string to send
+                message.channel.send('```css\n' + message.author.username + '\n' + board.map(e => e.join('')).join('\n') + '\n```');
+                // if the guess is correct, the game ends
+                if (collected.first().content === word) gameOver = true;
+			}).catch(collected => {
+				message.channel.send('Looks like nobody got the answer this time.');
+                gameOver = true;
+			});
+            if (gameOver) break;
+        }
+        message.channel.send(word);
     },
 
     // sends the username and id of the target in an embed format
