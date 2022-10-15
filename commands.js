@@ -1,4 +1,4 @@
-const { EmbedBuilder, AttachmentBuilder } = require('discord.js');
+const { EmbedBuilder, AttachmentBuilder, AuditLogOptionsType } = require('discord.js');
 const Canvas = require('@napi-rs/canvas');
 const { request } = require('undici');
 const hardCodedUsers = require('./cloud9_data/hardCodedUsers.json');
@@ -106,7 +106,7 @@ let commands = {
     // lets the user play a game of wordle
     "wordleCommand": async (message) => {
         // choose a random word from the answers array
-        let word = wordleAnswers[Math.floor(Math.random() * wordleAnswers.length)];
+        let word = "flash";//wordleAnswers[Math.floor(Math.random() * wordleAnswers.length)];
 
         // creates a multi-dimensional array of size [6][5] filled with blank spaces
         let board = Array.from(Array(6), x => Array.from(Array(5), x => ' '));
@@ -134,18 +134,32 @@ let commands = {
             await message.channel.awaitMessages({ filter, max: 1, time: 500000, errors: ['time'] })
             .then(collected => {
                 // populates the row away with the guess string
-                board[row] = Array.from(collected.first().content.toLowerCase());
+                board[row] = Array.from(collected.first().content.toLowerCase(), x => [x, 0]);
                 collected.first().delete();
 
-                // for each letter in the row
-                for (let i in board[row]) {
-                    // letterRel(ation) can be a value of 0, 1, or 2; 0 - not in the word, 1 - in the word, 2 - in the correct spot
-                    // it adds whether or not the letter occurs in the word, with if it is in the right spot, and multiplies it by whether or not there are too many of that letter
-                    let letterRel = (word.includes(board[row][i]) + (word[i] == board[row][i])) * (board[row].filter(x => x === board[row][i]).length <= Array.from(word).filter(x => x === board[row][i]).length);
-                    
-                    // based on the letterRelation, the letter is surrounded with certain symbols to color it
-                    board[row][i] = ' [#'[letterRel] + board[row][i] + ' ] '[letterRel];
+                // loops through each letter in the word and puts them into a table (letter: occurenceCount)
+                let letterOccurence = {};
+                for (let letter of word)
+                    letterOccurence[letter] = (letterOccurence[letter]) ? letterOccurence[letter] + 1 : 1;
+
+                // loops through twice
+                for (let i of [1, 0]) {
+                    // loops through each letter in the guess and changes their "correctness" identifier based on the iteration and boolean statements
+                    // If it is the first iteration, and the letter is in the right spot, its identifier is set to 2 and its occurence decremented
+                    // If it is the second iteration, and the letter is in the word as well as has occurences left, its identifier is set to one, and its occurence decremented
+                    for (let j in board[row]) {
+                        // current letter
+                        let curLtr = board[row][j][0];
+                        if (((curLtr == word[j]) && i) || (word.includes(curLtr) && letterOccurence[curLtr] && !i)) {
+                            board[row][j][1] = i + 1;
+                            letterOccurence[curLtr]--;
+                        }
+                    }
                 }
+
+                // based on the letterRelation, the letter is surrounded with certain symbols to color it
+                for (let i in board[row])
+                    board[row][i] = ' [#'[board[row][i][1]] + board[row][i][0] + ' ] '[board[row][i][1]];
 
                 // turns the board into a string to send
                 boardOutput = '```css\n' + message.author.username + '\n' + board.map(x => x.join('')).join('\n') + '\n```';
