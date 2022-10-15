@@ -103,6 +103,7 @@ let commands = {
         }
     },
 
+    // lets the user play a game of wordle
     "wordleCommand": async (message) => {
         // choose a random word from the answers array
         let word = wordleAnswers[Math.floor(Math.random() * wordleAnswers.length)];
@@ -113,15 +114,28 @@ let commands = {
         // loop checks this to see if the game is finished
         let gameOver = false;
 
+        // placeholder for the message, and for the message output
+        let gameMessage;
+        let boardOutput = '```css\nSend a 5 letter word to begin\n```';
+        
+        // send primary message then copy it into gameMessage
+        await message.channel.send(boardOutput)
+        .then(sent => {
+            message.channel.messages.fetch(sent.id)
+            .then(message => {gameMessage = message})
+            .catch(console.error);
+        });
+
         // `m` is a message object that will be passed through the filter function
         // checks if the word is in the answers or guesses lists as well as if the author is correct
         const filter = m => (wordleGuesses.includes(m.content.toLowerCase()) || wordleAnswers.includes(m.content.toLowerCase())) && m.author.id === message.author.id;
 
         for (let row in board) {
             await message.channel.awaitMessages({ filter, max: 1, time: 500000, errors: ['time'] })
-			.then(collected => {
+            .then(collected => {
                 // populates the row away with the guess string
                 board[row] = Array.from(collected.first().content.toLowerCase());
+                collected.first().delete();
 
                 // for each letter in the row
                 for (let i in board[row]) {
@@ -132,14 +146,19 @@ let commands = {
                     // based on the letterRelation, the letter is surrounded with certain symbols to color it
                     board[row][i] = ' [#'[letterRel] + board[row][i] + ' ] '[letterRel];
                 }
+
                 // turns the board into a string to send
-                message.channel.send('```css\n' + message.author.username + '\n' + board.map(e => e.join('')).join('\n') + '\n```');
+                boardOutput = '```css\n' + message.author.username + '\n' + board.map(x => x.join('')).join('\n') + '\n```';
+
+                // updates the game message
+                gameMessage.edit(boardOutput);
+
                 // if the guess is correct, the game ends
                 if (collected.first().content === word) gameOver = true;
-			}).catch(collected => {
-				message.channel.send('Looks like nobody got the answer this time.');
+            }).catch(collected => {
+                message.channel.send('Looks like nobody got the answer this time.');
                 gameOver = true;
-			});
+            });
             if (gameOver) break;
         }
         message.channel.send(word);
