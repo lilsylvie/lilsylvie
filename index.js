@@ -1,10 +1,19 @@
 // Require the necessary discord.js classes
 const { Client, GatewayIntentBits, ActivityType, Intents } = require('discord.js');
 const { token } = require('./config.json');
-const { commands, hardCodedUsers, commandRecipient } = require('./commands.js');
+
+const fs = require('fs');
+const hardCodedUsers = require('./cloud9_data/hardCodedUsers.json');
 
 // Create a new client instance
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
+
+// creates commands object
+let commands = {};
+const files = fs.readdirSync('./commands');
+// for each file, add a "file" command to the object
+for (let file of files) 
+    commands[file.slice(0, -3)] = require('./commands/' + file);
 
 // When the client is ready, run this code (only once)
 client.once('ready', () => {
@@ -18,7 +27,7 @@ client.options.presence.activities = [{name: 'vscode', type: ActivityType.Playin
 // functionality
 client.on('messageCreate', message => {
 	// send "gayyyy" quote if abby says gay at the beginning of a message (not case sensitive)
-	if (/^gay/i.test(message.content) && (hardCodedUsers[message.author.id].name == 'abby')) return message.channel.send({ files: ['./images/gay.jpg'] });
+	if (/^gay/i.test(message.content) && hardCodedUsers[message.author.id] && hardCodedUsers[message.author.id].name == 'abby') return message.channel.send({ files: ['./images/gay.jpg'] });
 
 	// command code
 	// if message content begins with '~'
@@ -30,7 +39,7 @@ client.on('messageCreate', message => {
 
 		// call the chosen command
 		try {
-			commands[cmd + "Command"](message, args, client.users);
+			commands[cmd](message, args, client.users);
 		} catch {
 			// triggers if the command doesn't exist
 			message.channel.send("Sorry 3: I don't know how to do that >_<");	

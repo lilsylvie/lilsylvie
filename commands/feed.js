@@ -1,0 +1,1 @@
+module.exports = (message, args) => message.channel.send((args[0].toLowerCase() === 'takis' ? 'YUMMYYYY!!! :3' : 'Ewwwww nooo :sob:')); // only likes takis

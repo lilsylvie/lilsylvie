@@ -1,0 +1,1 @@
+module.exports = (message) => message.channel.send('AHHHHHHH!!! :scream:'); // responds to "boo" with a scream
