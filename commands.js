@@ -58,17 +58,17 @@ let commands = {
 
     /* SMALL COMMANDS*/
 
-    "booCommand": (message) => message.channel.send('AHHHHHHH!!! :scream:'), // responds to "boo" with a scream
+    booCommand: (message) => message.channel.send('AHHHHHHH!!! :scream:'), // responds to "boo" with a scream
 
-    "uwuCommand": (message) => message.channel.send('*Rawr* ​x3 *nuzzles*, *pounces on you*, UwU you so warm'), // responds to "uwu" with a line from the bad furry rap
+    uwuCommand: (message) => message.channel.send('*Rawr* ​x3 *nuzzles*, *pounces on you*, UwU you so warm'), // responds to "uwu" with a line from the bad furry rap
 
-    "feedCommand": (message, args) => message.channel.send((args[0].toLowerCase() === 'takis' ? 'YUMMYYYY!!! :3' : 'Ewwwww nooo :sob:')), // only likes takis
+    feedCommand: (message, args) => message.channel.send((args[0].toLowerCase() === 'takis' ? 'YUMMYYYY!!! :3' : 'Ewwwww nooo :sob:')), // only likes takis
 
-    "ppCommand": (message) => message.channel.send('8' + '='.repeat(randomNum(0, 16)) + 'D'), // random size pp
+    ppCommand: (message) => message.channel.send('8' + '='.repeat(randomNum(0, 16)) + 'D'), // random size pp
 
-    "complimentCommand": (message) => randomChoice(message, compliments), // sends a random compliment
+    complimentCommand: (message) => randomChoice(message, compliments), // sends a random compliment
 
-    "femballCommand": (message) => randomChoice(message, femball), // random 8ball answer
+    femballCommand: (message) => randomChoice(message, femball), // random 8ball answer
 
     /* LARGE COMMANDS */
 
@@ -76,7 +76,7 @@ let commands = {
     ////////////////////////////////////////////////////////////////
 
     // sends an image of astolfo with the authors pfp in place of his face
-    "femboymeCommand": async (message) => {
+    femboymeCommand: async (message) => {
         // gets url for avatar
         const { body } = await request(message.author.displayAvatarURL({ extension: 'jpg' }));
 
@@ -85,7 +85,7 @@ let commands = {
     },
 
     // gives a hardcoded opinion for certain users
-    "opinionCommand": (message, args) => {
+    opinionCommand: (message, args) => {
         let id = commandRecipient(message, args);
         // if the id is in the list of users
         if (hardCodedUsers[id])
@@ -96,7 +96,7 @@ let commands = {
     },
 
     // parrots the message after the command if it was sent by sylvie
-    "sylviesayCommand": (message, args) => {
+    sylviesayCommand: (message, args) => {
         if (hardCodedUsers[message.author.id].name === 'sylvie') {
             message.channel.send(args.join(' '));
             message.delete();
@@ -104,9 +104,9 @@ let commands = {
     },
 
     // lets the user play a game of wordle
-    "wordleCommand": async (message) => {
+    wordleCommand: async (message) => {
         // choose a random word from the answers array
-        let word = "flash";//wordleAnswers[Math.floor(Math.random() * wordleAnswers.length)];
+        let word = wordleAnswers[Math.floor(Math.random() * wordleAnswers.length)];
 
         // creates a multi-dimensional array of size [6][5] filled with blank spaces
         let board = Array.from(Array(6), x => Array.from(Array(5), x => ' '));
@@ -179,7 +179,7 @@ let commands = {
     },
 
     // sends the username and id of the target in an embed format
-    "identifyCommand": async (message, args, users) => {
+    identifyCommand: async (message, args, users) => {
         try {
             let target = await users.fetch(commandRecipient(message, args)).then((user) => { return user });
 
@@ -199,7 +199,7 @@ let commands = {
     },
 
     // sends a list of commands and their descriptions in an embed format
-    "helpCommand": (message) => {
+    helpCommand: (message) => {
         // creates and posts embed
         const helpEmbed = new EmbedBuilder()
         .setColor(0xf2d2d6)
