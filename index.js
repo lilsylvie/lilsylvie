@@ -12,6 +12,7 @@ client.once('ready', () => {
 });
 
 // set activity to "Playing VIM"
+
 client.options.presence.activities = [{name: 'vscode', type: ActivityType.Playing}];
 
 // functionality
