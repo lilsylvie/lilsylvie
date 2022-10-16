@@ -1,9 +1,11 @@
-const { EmbedBuilder, AttachmentBuilder } = require('discord.js');
+const { EmbedBuilder, AttachmentBuilder, AuditLogOptionsType } = require('discord.js');
 const Canvas = require('@napi-rs/canvas');
 const { request } = require('undici');
 const hardCodedUsers = require('./cloud9_data/hardCodedUsers.json');
 const compliments = require('./cloud9_data/compliments.json');
 const femball = require('./cloud9_data/femball.json');
+const wordleAnswers = require('./cloud9_data/wordleAnswers.json');
+const wordleGuesses = require('./cloud9_data/wordleGuesses.json');
 
 // Utility Functions
 
@@ -56,17 +58,17 @@ let commands = {
 
     /* SMALL COMMANDS*/
 
-    "booCommand": (message) => message.channel.send('AHHHHHHH!!! :scream:'), // responds to "boo" with a scream
+    booCommand: (message) => message.channel.send('AHHHHHHH!!! :scream:'), // responds to "boo" with a scream
 
-    "uwuCommand": (message) => message.channel.send('*Rawr* ​x3 *nuzzles*, *pounces on you*, UwU you so warm'), // responds to "uwu" with a line from the bad furry rap
+    uwuCommand: (message) => message.channel.send('*Rawr* ​x3 *nuzzles*, *pounces on you*, UwU you so warm'), // responds to "uwu" with a line from the bad furry rap
 
-    "feedCommand": (message, args) => message.channel.send((args[0].toLowerCase() === 'takis' ? 'YUMMYYYY!!! :3' : 'Ewwwww nooo :sob:')), // only likes takis
+    feedCommand: (message, args) => message.channel.send((args[0].toLowerCase() === 'takis' ? 'YUMMYYYY!!! :3' : 'Ewwwww nooo :sob:')), // only likes takis
 
-    "ppCommand": (message) => message.channel.send('8' + '='.repeat(randomNum(0, 16)) + 'D'), // random size pp
+    ppCommand: (message) => message.channel.send('8' + '='.repeat(randomNum(0, 16)) + 'D'), // random size pp
 
-    "complimentCommand": (message) => randomChoice(message, compliments), // sends a random compliment
+    complimentCommand: (message) => randomChoice(message, compliments), // sends a random compliment
 
-    "femballCommand": (message) => randomChoice(message, femball), // random 8ball answer
+    femballCommand: (message) => randomChoice(message, femball), // random 8ball answer
 
     /* LARGE COMMANDS */
 
@@ -74,15 +76,16 @@ let commands = {
     ////////////////////////////////////////////////////////////////
 
     // sends an image of astolfo with the authors pfp in place of his face
-    "femboymeCommand": async (message) => {
+    femboymeCommand: async (message) => {
         // gets url for avatar
         const { body } = await request(message.author.displayAvatarURL({ extension: 'jpg' }));
+
         // draws and sends imaage with author's pfp on astolfo
         pfpDrawer(message.channel, 1598, 2400, './images/astolfo_full.webp', [{ id: message.author.id, avatarUrl: body, x: 560, y: 270, radius: 170, diameter: 340 }], 'femboyed', 'webp');
     },
 
     // gives a hardcoded opinion for certain users
-    "opinionCommand": (message, args) => {
+    opinionCommand: (message, args) => {
         let id = commandRecipient(message, args);
         // if the id is in the list of users
         if (hardCodedUsers[id])
@@ -93,15 +96,90 @@ let commands = {
     },
 
     // parrots the message after the command if it was sent by sylvie
-    "sylviesayCommand": (message, args) => {
+    sylviesayCommand: (message, args) => {
         if (hardCodedUsers[message.author.id].name === 'sylvie') {
             message.channel.send(args.join(' '));
             message.delete();
         }
     },
 
+    // lets the user play a game of wordle
+    wordleCommand: async (message) => {
+        // choose a random word from the answers array
+        let word = wordleAnswers[Math.floor(Math.random() * wordleAnswers.length)];
+
+        // creates a multi-dimensional array of size [6][5] filled with blank spaces
+        let board = Array.from(Array(6), x => Array.from(Array(5), x => ' '));
+
+        // loop checks this to see if the game is finished
+        let gameOver = false;
+
+        // placeholder for the message, and for the message output
+        let gameMessage;
+        let boardOutput = '```css\nSend a 5 letter word to begin\n```';
+        
+        // send primary message then copy it into gameMessage
+        await message.channel.send(boardOutput)
+        .then(sent => {
+            message.channel.messages.fetch(sent.id)
+            .then(message => {gameMessage = message})
+            .catch(console.error);
+        });
+
+        // `m` is a message object that will be passed through the filter function
+        // checks if the word is in the answers or guesses lists as well as if the author is correct
+        const filter = m => (wordleGuesses.includes(m.content.toLowerCase()) || wordleAnswers.includes(m.content.toLowerCase())) && m.author.id === message.author.id;
+
+        for (let row in board) {
+            await message.channel.awaitMessages({ filter, max: 1, time: 500000, errors: ['time'] })
+            .then(collected => {
+                // populates the row away with the guess string
+                board[row] = Array.from(collected.first().content.toLowerCase(), x => [x, 0]);
+                collected.first().delete();
+
+                // loops through each letter in the word and puts them into a table (letter: occurenceCount)
+                let letterOccurence = {};
+                for (let letter of word)
+                    letterOccurence[letter] = (letterOccurence[letter]) ? letterOccurence[letter] + 1 : 1;
+
+                // loops through twice
+                for (let i of [1, 0]) {
+                    // loops through each letter in the guess and changes their "correctness" identifier based on the iteration and boolean statements
+                    // If it is the first iteration, and the letter is in the right spot, its identifier is set to 2 and its occurence decremented
+                    // If it is the second iteration, and the letter is in the word as well as has occurences left, its identifier is set to one, and its occurence decremented
+                    for (let j in board[row]) {
+                        // current letter
+                        let curLtr = board[row][j][0];
+                        if (((curLtr == word[j]) && i) || (word.includes(curLtr) && letterOccurence[curLtr] && !i)) {
+                            board[row][j][1] = i + 1;
+                            letterOccurence[curLtr]--;
+                        }
+                    }
+                }
+
+                // based on the letterRelation, the letter is surrounded with certain symbols to color it
+                for (let i in board[row])
+                    board[row][i] = ' [#'[board[row][i][1]] + board[row][i][0] + ' ] '[board[row][i][1]];
+
+                // turns the board into a string to send
+                boardOutput = '```css\n' + message.author.username + '\n' + board.map(x => x.join('')).join('\n') + '\n```';
+
+                // updates the game message
+                gameMessage.edit(boardOutput);
+
+                // if the guess is correct, the game ends
+                if (collected.first().content === word) gameOver = true;
+            }).catch(collected => {
+                message.channel.send('Looks like nobody got the answer this time.');
+                gameOver = true;
+            });
+            if (gameOver) break;
+        }
+        message.channel.send(word);
+    },
+
     // sends the username and id of the target in an embed format
-    "identifyCommand": async (message, args, users) => {
+    identifyCommand: async (message, args, users) => {
         try {
             let target = await users.fetch(commandRecipient(message, args)).then((user) => { return user });
 
@@ -121,7 +199,7 @@ let commands = {
     },
 
     // sends a list of commands and their descriptions in an embed format
-    "helpCommand": (message) => {
+    helpCommand: (message) => {
         // creates and posts embed
         const helpEmbed = new EmbedBuilder()
         .setColor(0xf2d2d6)
