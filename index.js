@@ -5,6 +5,9 @@ const { token } = require('./config.json');
 const fs = require('fs');
 const hardCodedUsers = require('./cloud9_data/hardCodedUsers.json');
 
+const Filter = require('bad-words');
+let filter = new Filter;
+
 // Create a new client instance
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 
@@ -28,6 +31,9 @@ client.options.presence.activities = [{name: 'vscode', type: ActivityType.Playin
 client.on('messageCreate', message => {
 	// send "gayyyy" quote if abby says gay at the beginning of a message (not case sensitive)
 	if (/^gay/i.test(message.content) && hardCodedUsers[message.author.id] && hardCodedUsers[message.author.id].name == 'abby') return message.channel.send({ files: ['./images/gay.jpg'] });
+
+	// checks for any bad words in a message
+	if (filter.isProfane(message.content) &&  hardCodedUsers[message.author.id] && hardCodedUsers[message.author.id].name == "sylvie") message.reply('Watch your language!!! :sob:');
 
 	// command code
 	// if message content begins with '~'
